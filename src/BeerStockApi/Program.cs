@@ -7,6 +7,7 @@ builder.Services.AddDbContext<BeerStockApi.Infrastructure.BeerStockApiDbContext>
     options.UseSqlite(builder.Configuration.GetConnectionString("BeerStockDatabase")));
 
 builder.Services.AddOpenApi();
+builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
@@ -19,6 +20,8 @@ using (var scope = app.Services.CreateScope())
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
 app.MapGet("/health", () => Results.Ok(new { status = "healthy" }))
