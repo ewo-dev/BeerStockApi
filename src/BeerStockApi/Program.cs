@@ -1,11 +1,21 @@
 using Microsoft.EntityFrameworkCore;
 using BeerStockApi.Infrastructure;
 using BeerStockApi.Endpoints;
+using BeerStockApi.Repositories;
+using BeerStockApi.Services;
+using BeerStockApi.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<BeerStockApi.Infrastructure.BeerStockApiDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("BeerStockDatabase")));
+
+builder.Services.AddScoped<IBeerRepository, BeerRepository>();
+builder.Services.AddScoped<IWholesalerBeerRepository, WholesalerBeerRepository>();
+
+builder.Services.AddScoped<IBeerService, BeerService>();
+builder.Services.AddScoped<IStockService, StockService>();
+builder.Services.AddScoped<IQuoteService, QuoteService>();
 
 builder.Services.AddOpenApi();
 builder.Services.AddSwaggerGen();
@@ -24,6 +34,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 
 app.MapBeerEndpoints();
 
