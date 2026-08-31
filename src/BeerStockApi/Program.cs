@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using BeerStockApi.Infrastructure;
+using BeerStockApi.Endpoints;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,6 +24,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.MapBeerEndpoints();
 
 app.MapGet("/health", () => Results.Ok(new { status = "healthy" }))
     .WithName("GetHealth");
