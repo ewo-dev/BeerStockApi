@@ -39,6 +39,14 @@ ScaffoldingReadMe.txt
 # dotenv environment variables file
 .env
 
+# Visual Studio workspace metadata
+.vs/
+
+# Local SQLite database files
+*.db
+*.db-shm
+*.db-wal
+
 # Others
 ~$*
 *~
