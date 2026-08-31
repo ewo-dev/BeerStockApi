@@ -25,3 +25,6 @@ jobs:
 
       - name: Build
         run: dotnet build BeerStockApi.slnx --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test BeerStockApi.slnx --configuration Release --no-build
