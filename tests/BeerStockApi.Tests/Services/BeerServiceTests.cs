@@ -46,7 +46,7 @@ public class BeerServiceTests
         // Arrange
         var beers = new List<Beer>
         {
-            new Beer { Id = 1, Name = "Test Beer", AlcoholByVolume = 5.0m, UnitPriceExcludingVat = 2.5m, BrewerId = 1, Brewer = new Brewer { Id = 1, Name = "Test Brewery" } }
+            new() { Id = 1, Name = "Test Beer", AlcoholByVolume = 5.0m, UnitPriceExcludingVat = 2.5m, BrewerId = 1, Brewer = new Brewer { Id = 1, Name = "Test Brewery" } }
         };
         _mockRepository.Setup(r => r.GetAllAsync())
             .ReturnsAsync(beers);

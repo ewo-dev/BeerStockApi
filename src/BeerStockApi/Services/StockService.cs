@@ -15,10 +15,16 @@ public class StockService(IWholesalerBeerRepository wholesalerBeerRepository, IL
         return MapToWholesalerStockResponse(stock);
     }
 
-    public async Task<List<WholesalerStockResponse>> GetStocksByWholesalerAsync(int wholesalerId)
+    public async Task<List<BeerStockResponse>> GetStocksByWholesalerAsync(int wholesalerId)
     {
         var stocks = await _wholesalerBeerRepository.GetByWholesalerIdAsync(wholesalerId);
-        return stocks.Select(MapToWholesalerStockResponse).ToList();
+            return [.. stocks.Select(MapToBeerStockResponse)];
+    }
+
+    public async Task<List<WholesalerStockResponse>> GetWholesalersForBeerAsync(int beerId)
+    {
+        var stocks = await _wholesalerBeerRepository.GetByBeerIdAsync(beerId);
+            return [.. stocks.Select(MapToWholesalerStockResponse)];
     }
 
     public async Task<WholesalerStockResponse> UpdateStockAsync(int wholesalerId, int beerId, int newQuantity)
@@ -42,6 +48,13 @@ public class StockService(IWholesalerBeerRepository wholesalerBeerRepository, IL
         return new WholesalerStockResponse(
             stock.WholesalerId,
             stock.Wholesaler?.Name ?? "Unknown",
+            stock.Quantity);
+    }
+    private static BeerStockResponse MapToBeerStockResponse(Domain.WholesalerBeer stock)
+    {
+        return new BeerStockResponse(
+            stock.BeerId,
+            stock.Beer?.Name ?? "Unknown",
             stock.Quantity);
     }
 }
