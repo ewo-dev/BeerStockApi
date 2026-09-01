@@ -1,6 +1,220 @@
 @BeerStockApi_HostAddress = http://localhost:5101
 
-GET {{BeerStockApi_HostAddress}}/weatherforecast/
+# Donnees initiales de DbInitializer :
+# brewer 1 = Abbaye de Leffe, wholesaler 1 = GeneDrinks, beer 1 = Leffe Blonde
+@brewerId = 1
+@wholesalerId = 1
+@beerId = 3
+
+### Verifier que l'API est demarree
+GET {{BeerStockApi_HostAddress}}/health
 Accept: application/json
 
-###
+### Lister toutes les bieres avec leur brasserie et leurs grossistes
+GET {{BeerStockApi_HostAddress}}/api/beers/
+Accept: application/json
+
+### Lister les bieres d'une brasserie
+GET {{BeerStockApi_HostAddress}}/api/beers/brewers/{{brewerId}}
+Accept: application/json
+
+### Consulter une biere et les grossistes qui la vendent
+GET {{BeerStockApi_HostAddress}}/api/beers/{{beerId}}
+Accept: application/json
+
+### Creer une nouvelle biere
+# Apres la reponse, reporter l'ID genere dans @createdBeerId ci-dessous.
+POST {{BeerStockApi_HostAddress}}/api/beers/
+Content-Type: application/json
+
+{
+	"name": "Biere de demonstration",
+	"alcoholByVolume": 6.5,
+	"unitPriceExcludingVat": 2.5,
+	"brewerId": {{brewerId}}
+}
+
+### Ajouter une biere existante au catalogue d'un grossiste
+# Utilise la biere de demonstration creee ci-dessus (ID 11 sur une base neuve).
+@createdBeerId = 11
+POST {{BeerStockApi_HostAddress}}/api/wholesalers/{{wholesalerId}}/beers
+Content-Type: application/json
+
+{
+	"beerId": {{createdBeerId}},
+	"quantity": 25
+}
+
+### Lister le stock d'un grossiste
+GET {{BeerStockApi_HostAddress}}/api/wholesalers/{{wholesalerId}}/beers
+Accept: application/json
+
+### Mettre a jour la quantite en stock
+PUT {{BeerStockApi_HostAddress}}/api/wholesalers/{{wholesalerId}}/beers/{{createdBeerId}}/stock
+Content-Type: application/json
+
+{
+	"quantity": 20
+}
+
+### Lister les grossistes qui vendent une biere
+GET {{BeerStockApi_HostAddress}}/api/beers/{{createdBeerId}}/wholesalers
+Accept: application/json
+
+### Modifier une biere existante
+PUT {{BeerStockApi_HostAddress}}/api/beers/{{createdBeerId}}
+Content-Type: application/json
+
+{
+	"name": "Biere de demonstration - modifiee",
+	"unitPriceExcludingVat": 2.75
+}
+
+### Generer un devis sans remise
+POST {{BeerStockApi_HostAddress}}/api/quotes/
+Content-Type: application/json
+
+{
+	"wholesalerId": {{wholesalerId}},
+	"lines": [
+		{
+			"beerId": 1,
+			"quantity": 5
+		}
+	]
+}
+
+### Generer un devis avec remise de 10 %
+POST {{BeerStockApi_HostAddress}}/api/quotes/
+Content-Type: application/json
+
+{
+	"wholesalerId": {{wholesalerId}},
+	"lines": [
+		{
+			"beerId": 1,
+			"quantity": 10
+		}
+	]
+}
+
+### Generer un devis avec remise de 20 %
+POST {{BeerStockApi_HostAddress}}/api/quotes/
+Content-Type: application/json
+
+{
+	"wholesalerId": {{wholesalerId}},
+	"lines": [
+		{
+			"beerId": 1,
+			"quantity": 20
+		}
+	]
+}
+
+### Erreur attendue : commande vide
+POST {{BeerStockApi_HostAddress}}/api/quotes/
+Content-Type: application/json
+
+{
+	"wholesalerId": {{wholesalerId}},
+	"lines": []
+}
+
+### Erreur attendue : doublon dans la commande
+POST {{BeerStockApi_HostAddress}}/api/quotes/
+Content-Type: application/json
+
+{
+	"wholesalerId": {{wholesalerId}},
+	"lines": [
+		{
+			"beerId": 1,
+			"quantity": 1
+		},
+		{
+			"beerId": 1,
+			"quantity": 1
+		}
+	]
+}
+
+### Erreur attendue : grossiste inexistant
+POST {{BeerStockApi_HostAddress}}/api/quotes/
+Content-Type: application/json
+
+{
+	"wholesalerId": 999,
+	"lines": [
+		{
+			"beerId": 1,
+			"quantity": 1
+		}
+	]
+}
+
+### Erreur attendue : quantite invalide dans la commande
+POST {{BeerStockApi_HostAddress}}/api/quotes/
+Content-Type: application/json
+
+{
+	"wholesalerId": {{wholesalerId}},
+	"lines": [
+		{
+			"beerId": 1,
+			"quantity": 0
+		}
+	]
+}
+
+### Erreur attendue : stock insuffisant
+# GeneDrinks possede 10 exemplaires de la biere 1 dans les donnees initiales.
+POST {{BeerStockApi_HostAddress}}/api/quotes/
+Content-Type: application/json
+
+{
+	"wholesalerId": {{wholesalerId}},
+	"lines": [
+		{
+			"beerId": 1,
+			"quantity": 11
+		}
+	]
+}
+
+### Erreur attendue : la biere n'est pas vendue par le grossiste
+# La biere 2 est vendue par le grossiste 2, pas par GeneDrinks (grossiste 1).
+POST {{BeerStockApi_HostAddress}}/api/quotes/
+Content-Type: application/json
+
+{
+	"wholesalerId": {{wholesalerId}},
+	"lines": [
+		{
+			"beerId": 2,
+			"quantity": 1
+		}
+	]
+}
+
+### Erreur attendue : biere deja presente dans le catalogue
+POST {{BeerStockApi_HostAddress}}/api/wholesalers/{{wholesalerId}}/beers
+Content-Type: application/json
+
+{
+	"beerId": 1,
+	"quantity": 5
+}
+
+### Erreur attendue : quantite de stock invalide
+PUT {{BeerStockApi_HostAddress}}/api/wholesalers/{{wholesalerId}}/beers/1/stock
+Content-Type: application/json
+
+{
+	"quantity": -1
+}
+
+### Supprimer la biere de demonstration
+# A executer en dernier : cette requete est volontairement destructive.
+DELETE {{BeerStockApi_HostAddress}}/api/beers/{{createdBeerId}}
+Accept: application/json
