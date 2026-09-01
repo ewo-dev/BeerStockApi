@@ -43,7 +43,7 @@ public class QuoteService(
 
             var beer = await _beerRepository.GetByIdAsync(line.BeerId) ?? throw new BusinessException($"La bière avec l'ID {line.BeerId} n'existe pas.");
 
-            var stock = stocks.FirstOrDefault(s => s.BeerId == line.BeerId) ?? throw new BusinessException($"Le grossiste n'a pas la bière '{beer.Name}' (ID {line.BeerId}) en catalogne.");
+            var stock = stocks.FirstOrDefault(s => s.BeerId == line.BeerId) ?? throw new BusinessException($"Le grossiste n'a pas la bière '{beer.Name}' (ID {line.BeerId}) en catalogue.");
 
             if (stock.Quantity < line.Quantity)
             {

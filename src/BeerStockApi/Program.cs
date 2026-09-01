@@ -39,6 +39,7 @@ app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 
 app.MapBeerEndpoints();
 app.MapStockEndpoints();
+app.MapQuoteEndpoints();
 
 app.MapGet("/health", () => Results.Ok(new { status = "healthy" }))
     .WithName("GetHealth");

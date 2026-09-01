@@ -49,7 +49,6 @@ public class BeerService(IBeerRepository beerRepository, ILogger<BeerService> lo
     {
         var beer = await _beerRepository.GetByIdAsync(id) ?? throw new BusinessException($"Bière avec l'ID {id} introuvable.");
 
-        // Mettre à jour les champs fournis
         if (!string.IsNullOrWhiteSpace(request.Name))
             beer.Name = request.Name;
 
