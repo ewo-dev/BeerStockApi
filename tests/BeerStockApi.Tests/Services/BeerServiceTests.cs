@@ -12,14 +12,16 @@ namespace BeerStockApi.Tests.Services;
 public class BeerServiceTests
 {
     private readonly Mock<IBeerRepository> _mockRepository;
+    private readonly Mock<IBrewerRepository> _mockBrewerRepository;
     private readonly Mock<ILogger<BeerService>> _mockLogger;
     private readonly BeerService _service;
 
     public BeerServiceTests()
     {
         _mockRepository = new Mock<IBeerRepository>();
+        _mockBrewerRepository = new Mock<IBrewerRepository>();
         _mockLogger = new Mock<ILogger<BeerService>>();
-        _service = new BeerService(_mockRepository.Object, _mockLogger.Object);
+        _service = new BeerService(_mockRepository.Object, _mockBrewerRepository.Object, _mockLogger.Object);
     }
 
     #region GetAllBeersAsync Tests
@@ -117,6 +119,8 @@ public class BeerServiceTests
         
         _mockRepository.Setup(r => r.CreateAsync(It.IsAny<Beer>()))
             .ReturnsAsync(createdBeer);
+        _mockBrewerRepository.Setup(r => r.GetByIdAsync(1))
+            .ReturnsAsync(new Brewer { Id = 1, Name = "Test Brewery" });
 
         // Act
         var result = await _service.CreateBeerAsync(request);

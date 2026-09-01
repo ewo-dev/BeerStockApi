@@ -6,9 +6,10 @@ using BeerStockApi.Repositories;
 
 namespace BeerStockApi.Services;
 
-public class BeerService(IBeerRepository beerRepository, ILogger<BeerService> logger) : IBeerService
+public class BeerService(IBeerRepository beerRepository, IBrewerRepository brewerRepository, ILogger<BeerService> logger) : IBeerService
 {
     private readonly IBeerRepository _beerRepository = beerRepository;
+    private readonly IBrewerRepository _brewerRepository = brewerRepository;
     private readonly ILogger<BeerService> _logger = logger;
 
     public async Task<List<BeerResponse>> GetAllBeersAsync()
@@ -31,6 +32,13 @@ public class BeerService(IBeerRepository beerRepository, ILogger<BeerService> lo
 
     public async Task<BeerResponse> CreateBeerAsync(CreateBeerRequest request)
     {
+        ValidateName(request.Name);
+        ValidateAlcoholByVolume(request.AlcoholByVolume);
+        ValidateUnitPrice(request.UnitPriceExcludingVat);
+
+        _ = await _brewerRepository.GetByIdAsync(request.BrewerId)
+            ?? throw new BusinessException($"Le brasseur avec l'ID {request.BrewerId} n'existe pas.");
+
         var beer = new Beer
         {
             Name = request.Name,
@@ -49,17 +57,30 @@ public class BeerService(IBeerRepository beerRepository, ILogger<BeerService> lo
     {
         var beer = await _beerRepository.GetByIdAsync(id) ?? throw new BusinessException($"Bière avec l'ID {id} introuvable.");
 
-        if (!string.IsNullOrWhiteSpace(request.Name))
+        if (request.Name != null)
+        {
+            ValidateName(request.Name);
             beer.Name = request.Name;
+        }
 
         if (request.AlcoholByVolume.HasValue)
+        {
+            ValidateAlcoholByVolume(request.AlcoholByVolume.Value);
             beer.AlcoholByVolume = request.AlcoholByVolume.Value;
+        }
 
         if (request.UnitPriceExcludingVat.HasValue)
+        {
+            ValidateUnitPrice(request.UnitPriceExcludingVat.Value);
             beer.UnitPriceExcludingVat = request.UnitPriceExcludingVat.Value;
+        }
 
         if (request.BrewerId.HasValue)
+        {
+            _ = await _brewerRepository.GetByIdAsync(request.BrewerId.Value)
+                ?? throw new BusinessException($"Le brasseur avec l'ID {request.BrewerId.Value} n'existe pas.");
             beer.BrewerId = request.BrewerId.Value;
+        }
 
         var updatedBeer = await _beerRepository.UpdateAsync(beer);
         _logger.LogInformation("Bière mise à jour: {BeerId}", updatedBeer.Id);
@@ -72,6 +93,34 @@ public class BeerService(IBeerRepository beerRepository, ILogger<BeerService> lo
         var beer = await _beerRepository.GetByIdAsync(id) ?? throw new BusinessException($"Bière avec l'ID {id} introuvable.");
         await _beerRepository.DeleteAsync(id);
         _logger.LogInformation("Bière supprimée: {BeerId}", id);
+    }
+
+    private static void ValidateName(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            throw new ValidationException("Le nom de la bière est obligatoire.");
+        }
+        if (name.Length > 100)
+        {
+            throw new ValidationException("Le nom de la bière ne peut pas dépasser 100 caractères.");
+        }
+    }
+
+    private static void ValidateAlcoholByVolume(decimal alcoholByVolume)
+    {
+        if (alcoholByVolume <= 0 || alcoholByVolume > 100)
+        {
+            throw new ValidationException("Le taux d'alcool doit être compris entre 0 et 100.");
+        }
+    }
+
+    private static void ValidateUnitPrice(decimal unitPrice)
+    {
+        if (unitPrice <= 0)
+        {
+            throw new ValidationException("Le prix unitaire doit être supérieur à 0.");
+        }
     }
 
     private static BeerResponse MapToBeerResponse(Beer beer)
