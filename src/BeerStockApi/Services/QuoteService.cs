@@ -59,7 +59,7 @@ public class QuoteService(
             decimal unitPrice = beer.UnitPriceExcludingVat;
             decimal discountPercent = CalculateDiscount(line.Quantity);
             decimal priceAfterDiscount = unitPrice * (1 - discountPercent / 100);
-            decimal lineTotal = priceAfterDiscount * line.Quantity;
+            decimal lineTotal = Math.Round(priceAfterDiscount * line.Quantity, 2, MidpointRounding.AwayFromZero);
 
             quoteLines.Add(new QuoteLineResponse
             {
@@ -74,7 +74,7 @@ public class QuoteService(
             subTotal += lineTotal;
         }
 
-        decimal vat = subTotal * VAT_RATE;
+        decimal vat = Math.Round(subTotal * VAT_RATE, 2, MidpointRounding.AwayFromZero);
         decimal finalTotal = subTotal + vat;
 
         _logger.LogInformation("Devis généré avec succès pour le grossiste {WholesalerId}. Total: {FinalTotal}",
