@@ -33,17 +33,31 @@ public class GlobalExceptionHandlerMiddleware(RequestDelegate next, ILogger<Glob
         switch (exception)
         {
             case BusinessException businessException:
-                response.StatusCode = StatusCodes.Status400BadRequest;
-                problemDetails.Title = "Erreur Métier";
+                // Check if it's a "not found" error
+                bool isNotFound = businessException.Message.Contains("introuvable") 
+                    || businessException.Message.Contains("not found")
+                    || businessException.Message.Contains("n'existe pas");
+
+                if (isNotFound)
+                {
+                    response.StatusCode = StatusCodes.Status404NotFound;
+                    problemDetails.Title = "Ressource Non Trouvée";
+                    problemDetails.Status = StatusCodes.Status404NotFound;
+                }
+                else
+                {
+                    response.StatusCode = StatusCodes.Status400BadRequest;
+                    problemDetails.Title = "Erreur Métier";
+                    problemDetails.Status = StatusCodes.Status400BadRequest;
+                }
                 problemDetails.Detail = businessException.Message;
-                problemDetails.Status = StatusCodes.Status400BadRequest;
                 break;
 
             case ValidationException validationException:
-                response.StatusCode = StatusCodes.Status400BadRequest;
+                response.StatusCode = StatusCodes.Status422UnprocessableEntity;
                 problemDetails.Title = "Erreur de Validation";
                 problemDetails.Detail = validationException.Message;
-                problemDetails.Status = StatusCodes.Status400BadRequest;
+                problemDetails.Status = StatusCodes.Status422UnprocessableEntity;
                 break;
 
             default:

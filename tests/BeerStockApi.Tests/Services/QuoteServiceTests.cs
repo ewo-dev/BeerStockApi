@@ -13,6 +13,7 @@ public class QuoteServiceTests
 {
     private readonly Mock<IBeerRepository> _beerRepository;
     private readonly Mock<IWholesalerBeerRepository> _wholesalerBeerRepository;
+    private readonly Mock<IWholesalerRepository> _wholesalerRepository;
     private readonly Mock<ILogger<QuoteService>> _logger;
     private readonly QuoteService _service;
 
@@ -20,8 +21,9 @@ public class QuoteServiceTests
     {
         _beerRepository = new Mock<IBeerRepository>();
         _wholesalerBeerRepository = new Mock<IWholesalerBeerRepository>();
+        _wholesalerRepository = new Mock<IWholesalerRepository>();
         _logger = new Mock<ILogger<QuoteService>>();
-        _service = new QuoteService(_beerRepository.Object, _wholesalerBeerRepository.Object, _logger.Object);
+        _service = new QuoteService(_beerRepository.Object, _wholesalerBeerRepository.Object, _wholesalerRepository.Object, _logger.Object);
     }
 
     [Fact]
@@ -46,6 +48,8 @@ public class QuoteServiceTests
         };
 
         SetupBeers(beers);
+        _wholesalerRepository.Setup(r => r.GetByIdAsync(request.WholesalerId))
+            .ReturnsAsync(new Wholesaler { Id = request.WholesalerId, Name = "Test Wholesaler" });
         _wholesalerBeerRepository.Setup(r => r.GetByWholesalerIdAsync(request.WholesalerId))
             .ReturnsAsync(
             [
@@ -80,6 +84,9 @@ public class QuoteServiceTests
             Lines = []
         };
 
+        _wholesalerRepository.Setup(r => r.GetByIdAsync(request.WholesalerId))
+            .ReturnsAsync(new Wholesaler { Id = request.WholesalerId, Name = "Test Wholesaler" });
+
         // Act & Assert
         await Assert.ThrowsAsync<ValidationException>(() => _service.GenerateQuoteAsync(request));
     }
@@ -98,6 +105,9 @@ public class QuoteServiceTests
             ]
         };
 
+        _wholesalerRepository.Setup(r => r.GetByIdAsync(request.WholesalerId))
+            .ReturnsAsync(new Wholesaler { Id = request.WholesalerId, Name = "Test Wholesaler" });
+
         // Act & Assert
         await Assert.ThrowsAsync<ValidationException>(() => _service.GenerateQuoteAsync(request));
     }
@@ -115,6 +125,8 @@ public class QuoteServiceTests
         };
         var beer = CreateBeer(1, "IPA", 2.00m);
 
+        _wholesalerRepository.Setup(r => r.GetByIdAsync(request.WholesalerId))
+            .ReturnsAsync(new Wholesaler { Id = request.WholesalerId, Name = "Test Wholesaler" });
         SetupBeers(beer);
         _wholesalerBeerRepository.Setup(r => r.GetByWholesalerIdAsync(request.WholesalerId))
             .ReturnsAsync([CreateStock(request.WholesalerId, beer, 10)]);
@@ -133,6 +145,8 @@ public class QuoteServiceTests
             Lines = [new QuoteLineRequest { BeerId = 99, Quantity = 1 }]
         };
 
+        _wholesalerRepository.Setup(r => r.GetByIdAsync(request.WholesalerId))
+            .ReturnsAsync(new Wholesaler { Id = request.WholesalerId, Name = "Test Wholesaler" });
         _beerRepository.Setup(r => r.GetByIdAsync(99))
             .ReturnsAsync((Beer?)null);
         _wholesalerBeerRepository.Setup(r => r.GetByWholesalerIdAsync(request.WholesalerId))
@@ -153,6 +167,8 @@ public class QuoteServiceTests
         };
         var beer = CreateBeer(1, "IPA", 2.00m);
 
+        _wholesalerRepository.Setup(r => r.GetByIdAsync(request.WholesalerId))
+            .ReturnsAsync(new Wholesaler { Id = request.WholesalerId, Name = "Test Wholesaler" });
         SetupBeers(beer);
         _wholesalerBeerRepository.Setup(r => r.GetByWholesalerIdAsync(request.WholesalerId))
             .ReturnsAsync([]);
@@ -172,6 +188,8 @@ public class QuoteServiceTests
         };
         var beer = CreateBeer(1, "IPA", 2.00m);
 
+        _wholesalerRepository.Setup(r => r.GetByIdAsync(request.WholesalerId))
+            .ReturnsAsync(new Wholesaler { Id = request.WholesalerId, Name = "Test Wholesaler" });
         SetupBeers(beer);
         _wholesalerBeerRepository.Setup(r => r.GetByWholesalerIdAsync(request.WholesalerId))
             .ReturnsAsync([CreateStock(request.WholesalerId, beer, 10)]);

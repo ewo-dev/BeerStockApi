@@ -36,6 +36,13 @@ public class WholesalerBeerRepository(BeerStockApiDbContext context) : IWholesal
             .ToListAsync();
     }
 
+    public async Task<WholesalerBeer> CreateAsync(WholesalerBeer wholesalerBeer)
+    {
+        _context.WholesalerBeers.Add(wholesalerBeer);
+        await _context.SaveChangesAsync();
+        return await GetStockAsync(wholesalerBeer.WholesalerId, wholesalerBeer.BeerId) ?? wholesalerBeer;
+    }
+
     public async Task<WholesalerBeer> UpdateStockAsync(WholesalerBeer wholesalerBeer)
     {
         _context.WholesalerBeers.Update(wholesalerBeer);

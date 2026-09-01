@@ -27,18 +27,7 @@ public static class QuoteEndpoints
 
     private static async Task<IResult> CreateQuote(CreateQuoteRequest request, IQuoteService quoteService)
     {
-        try
-        {
-            var quote = await quoteService.GenerateQuoteAsync(request);
-            return Results.Ok(quote);
-        }
-        catch (Exception ex) when (ex.GetType().Name == "ValidationException")
-        {
-            return Results.UnprocessableEntity(new { message = ex.Message });
-        }
-        catch (Exception ex) when (ex.GetType().Name == "BusinessException")
-        {
-            return Results.NotFound(new { message = ex.Message });
-        }
+        var quote = await quoteService.GenerateQuoteAsync(request);
+        return Results.Ok(quote);
     }
 }

@@ -19,6 +19,13 @@ public static class BeerEndpoints
             .Produces<List<BeerResponse>>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status500InternalServerError);
 
+        group.MapGet("/brewers/{brewerId}", GetBeersByBrewer)
+            .WithName("GetBeersByBrewer")
+            .WithSummary("Get beers by brewer")
+            .WithDescription("Returns a list of all beers from a specific brewer")
+            .Produces<List<BeerResponse>>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status500InternalServerError);
+
         group.MapGet("/{id}", GetBeerById)
             .WithName("GetBeerById")
             .WithSummary("Get a beer by ID")
@@ -65,59 +72,33 @@ public static class BeerEndpoints
         return Results.Ok(beers);
     }
 
+    private static async Task<IResult> GetBeersByBrewer(int brewerId, IBeerService beerService)
+    {
+        var beers = await beerService.GetBeersByBrewerAsync(brewerId);
+        return Results.Ok(beers);
+    }
+
     private static async Task<IResult> GetBeerById(int id, IBeerService beerService)
     {
-        try
-        {
-            var beer = await beerService.GetBeerByIdAsync(id);
-            return Results.Ok(beer);
-        }
-        catch (Exception ex) when (ex.Message.Contains("not found") || ex.Message.Contains("introuvable"))
-        {
-            return Results.NotFound(new { message = $"Beer with ID {id} not found" });
-        }
+        var beer = await beerService.GetBeerByIdAsync(id);
+        return Results.Ok(beer);
     }
 
     private static async Task<IResult> CreateBeer(CreateBeerRequest request, IBeerService beerService)
     {
-        try
-        {
-            var beer = await beerService.CreateBeerAsync(request);
-            return Results.Created($"/api/beers/{beer.Id}", beer);
-        }
-        catch (Exception ex) when (ex.GetType().Name == "ValidationException")
-        {
-            return Results.UnprocessableEntity(new { message = ex.Message });
-        }
+        var beer = await beerService.CreateBeerAsync(request);
+        return Results.Created($"/api/beers/{beer.Id}", beer);
     }
 
     private static async Task<IResult> UpdateBeer(int id, UpdateBeerRequest request, IBeerService beerService)
     {
-        try
-        {
-            var beer = await beerService.UpdateBeerAsync(id, request);
-            return Results.Ok(beer);
-        }
-        catch (Exception ex) when (ex.Message.Contains("not found") || ex.Message.Contains("introuvable"))
-        {
-            return Results.NotFound(new { message = $"Beer with ID {id} not found" });
-        }
-        catch (Exception ex) when (ex.GetType().Name == "ValidationException")
-        {
-            return Results.UnprocessableEntity(new { message = ex.Message });
-        }
+        var beer = await beerService.UpdateBeerAsync(id, request);
+        return Results.Ok(beer);
     }
 
     private static async Task<IResult> DeleteBeer(int id, IBeerService beerService)
     {
-        try
-        {
-            await beerService.DeleteBeerAsync(id);
-            return Results.NoContent();
-        }
-        catch (Exception ex) when (ex.Message.Contains("not found") || ex.Message.Contains("introuvable"))
-        {
-            return Results.NotFound(new { message = $"Beer with ID {id} not found" });
-        }
+        await beerService.DeleteBeerAsync(id);
+        return Results.NoContent();
     }
 }

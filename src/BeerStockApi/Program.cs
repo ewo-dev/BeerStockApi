@@ -12,6 +12,7 @@ builder.Services.AddDbContext<BeerStockApi.Infrastructure.BeerStockApiDbContext>
 
 builder.Services.AddScoped<IBeerRepository, BeerRepository>();
 builder.Services.AddScoped<IWholesalerBeerRepository, WholesalerBeerRepository>();
+builder.Services.AddScoped<IWholesalerRepository, WholesalerRepository>();
 
 builder.Services.AddScoped<IBeerService, BeerService>();
 builder.Services.AddScoped<IStockService, StockService>();

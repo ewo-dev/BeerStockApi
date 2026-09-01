@@ -17,7 +17,17 @@ public static class StockEndpoints
             .WithSummary("Get beers in stock for a wholesaler")
             .WithDescription("Returns a list of all beers available at a specific wholesaler with their quantities")
             .Produces<List<BeerStockResponse>>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status500InternalServerError);
+
+        group.MapPost("/wholesalers/{wholesalerId}/beers", AddBeerToWholesaler)
+            .WithName("AddBeerToWholesaler")
+            .WithSummary("Add a beer to wholesaler catalog")
+            .WithDescription("Adds an existing beer to a wholesaler's catalog with an initial quantity")
+            .Accepts<CreateBeerSaleRequest>("application/json")
+            .Produces<WholesalerStockResponse>(StatusCodes.Status201Created)
+            .Produces(StatusCodes.Status400BadRequest)
             .Produces(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status422UnprocessableEntity)
             .Produces(StatusCodes.Status500InternalServerError);
 
         group.MapGet("/beers/{beerId}/wholesalers", GetWholesalersForBeer)
@@ -25,7 +35,6 @@ public static class StockEndpoints
             .WithSummary("Get wholesalers that sell a beer")
             .WithDescription("Returns a list of all wholesalers that have a specific beer in stock")
             .Produces<List<WholesalerStockResponse>>(StatusCodes.Status200OK)
-            .Produces(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status500InternalServerError);
 
         group.MapPut("/wholesalers/{wholesalerId}/beers/{beerId}/stock", UpdateStock)
@@ -46,30 +55,25 @@ public static class StockEndpoints
         int wholesalerId,
         IStockService stockService)
     {
-        try
-        {
-            var stocks = await stockService.GetStocksByWholesalerAsync(wholesalerId);
-            return Results.Ok(stocks);
-        }
-        catch (Exception ex)
-        {
-            return Results.Problem(ex.Message, statusCode: StatusCodes.Status500InternalServerError);
-        }
+        var stocks = await stockService.GetStocksByWholesalerAsync(wholesalerId);
+        return Results.Ok(stocks);
+    }
+
+    private static async Task<IResult> AddBeerToWholesaler(
+        int wholesalerId,
+        CreateBeerSaleRequest request,
+        IStockService stockService)
+    {
+        var stock = await stockService.AddBeerToWholesalerAsync(wholesalerId, request);
+        return Results.Created($"/api/wholesalers/{wholesalerId}/beers/{request.BeerId}", stock);
     }
 
     private static async Task<IResult> GetWholesalersForBeer(
         int beerId,
         IStockService stockService)
     {
-        try
-        {
-            var wholesalers = await stockService.GetWholesalersForBeerAsync(beerId);
-            return Results.Ok(wholesalers);
-        }
-        catch (Exception ex)
-        {
-            return Results.Problem(ex.Message, statusCode: StatusCodes.Status500InternalServerError);
-        }
+        var wholesalers = await stockService.GetWholesalersForBeerAsync(beerId);
+        return Results.Ok(wholesalers);
     }
 
     private static async Task<IResult> UpdateStock(
@@ -78,14 +82,7 @@ public static class StockEndpoints
         UpdateStockRequest request,
         IStockService stockService)
     {
-        try
-        {
-            var updatedStock = await stockService.UpdateStockAsync(wholesalerId, beerId, request.Quantity);
-            return Results.Ok(updatedStock);
-        }
-        catch (Exception ex)
-        {
-            return Results.Problem(ex.Message, statusCode: StatusCodes.Status400BadRequest);
-        }
+        var updatedStock = await stockService.UpdateStockAsync(wholesalerId, beerId, request.Quantity);
+        return Results.Ok(updatedStock);
     }
 }

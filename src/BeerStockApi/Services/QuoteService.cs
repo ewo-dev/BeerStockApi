@@ -8,16 +8,22 @@ namespace BeerStockApi.Services;
 public class QuoteService(
     IBeerRepository beerRepository,
     IWholesalerBeerRepository wholesalerBeerRepository,
+    IWholesalerRepository wholesalerRepository,
     ILogger<QuoteService> logger) : IQuoteService
 {
     private const decimal VAT_RATE = 0.21m; // 21% de TVA
 
     private readonly IBeerRepository _beerRepository = beerRepository;
     private readonly IWholesalerBeerRepository _wholesalerBeerRepository = wholesalerBeerRepository;
+    private readonly IWholesalerRepository _wholesalerRepository = wholesalerRepository;
     private readonly ILogger<QuoteService> _logger = logger;
 
     public async Task<QuoteResponse> GenerateQuoteAsync(CreateQuoteRequest request)
     {
+        // Validate wholesaler exists
+        var wholesaler = await _wholesalerRepository.GetByIdAsync(request.WholesalerId)
+            ?? throw new BusinessException($"Le grossiste avec l'ID {request.WholesalerId} n'existe pas.");
+
         if (request.Lines == null || request.Lines.Count == 0)
         {
             throw new ValidationException("La commande ne peut pas être vide.");
